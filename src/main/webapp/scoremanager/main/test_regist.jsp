@@ -70,7 +70,6 @@
 							<th>クラス</th>
 							<th>氏名</th>
 							<th>点数</th>
-							<th class="text-center">在学中</th>
 							<th></th>
 							<th></th>
 						</tr>
