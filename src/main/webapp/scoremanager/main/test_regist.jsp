@@ -38,10 +38,12 @@
 						<div class="col-4">
 							<th>科目</th>
 							<select class="form-select" id="test-f3-select" name="f3">
-								<option value="0">--------</option>
-								<c:forEach var="subject.cd" items="${subject_cd_set }">
+								<option value="">--------</option>
+								<c:forEach var="subject" items="${subjectList}">
 									<%-- 現在のyearと選択されていたf3が一致した場合selectedを追記 --%>
-									<option value="${subject.cd}" <c:if test="${subject.cd == f3}">selected</c:if>>${num}</option>
+									<option value="${subject.cd}" <c:if test="${subject.cd == f3}">selected</c:if>>
+										${subject.name}
+									</option>
 								</c:forEach>
 							</select>
 						</div>
@@ -61,8 +63,8 @@
 					</div>
 				</form>
 				<c:choose>
-				<c:when test="${tests.size()>0 }">
-					<h2>科目:${tests.size() }件</h2>
+				<c:when test="${f3}(${f4})">
+					<h2>科目:${(test.no回)}</h2>
 					<table class="table table-hover">
 						<tr>
 							<th>入学年度</th>
@@ -73,28 +75,19 @@
 							<th></th>
 							<th></th>
 						</tr>
-						<c:forEach var="student" items="${students }">
+						<c:forEach var="test" items="${tests }">
 							<tr>
-								<td>${student.entYear}</td>
-								<td>${student.no}</td>
-								<td>${student.classNum}</td>
-								<td>${student.name}</td>
-								<input class="form-control" name="no" type="text" id="input1"
-								 placeholder="" value="${no}"
-								 maxlength="10" required />
-								<td class="text-center">
-									<%-- 在学フラグがたっている場合「〇」それ以外は「×」を表示 --%>
-									<c:choose>
-
-										<c:when test="${student.isAttend() }">
-											〇
-										</c:when>
-										<c:otherwise>
-											×
-										</c:otherwise>
-									</c:choose>
-									</td>
-									<td><a href="StudentUpdate.action?no=${student.no}">登録して終了</a></td>
+								<th>${test.entYear}</th>
+								<td>${test.no}</td>
+								<td>${test.classNum}</td>
+								<td>${test.name}</td>
+								<td>
+    								<input type="text" name="point_${test.studentNo}"
+        							 value="${test.point}" class="form-control" />
+								</td>
+								
+								<td><a href="StudentUpdate.action?no=${student.no}">登録して終了</a></td>
+							</tr>
 						</c:forEach>
 					</table>
 				</c:when>
