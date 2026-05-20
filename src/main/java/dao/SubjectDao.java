@@ -8,55 +8,49 @@ import java.util.ArrayList;
 import java.util.List;
 
 import bean.School;
-import bean.Student;
 import bean.Subject;
 
 public class SubjectDao extends Dao{
 
-	public Subject get(String cd,School school) throws Exception {
-		Subject subject = new Subject();
-		subject.setSchool(school);
-		// データベースへのコネクションを確率
-		Connection connection = getConnection();
-		// プリペアードステートメント
-		PreparedStatement statement = null;
+	public Subject get(String cd, School school) throws Exception {
+	    Subject subject = new Subject();
+	    subject.setSchool(school);
+	    Connection connection = getConnection();
+	    PreparedStatement statement = null;
 
-		try {
-			// プリペアードステートメントにSQL文をセット
-			statement = connection.prepareStatement("select * from subject where school_cd=? and cd=?");
-			// プリペアードステートメントに学生番号をバインド
-			statement.setString(1, school.getCd());
-			statement.setString(2, cd);
-			// プリペアードステートメントを実行
-			ResultSet rSet = statement.executeQuery();
+	    try {
+	        // ✅ is_true = true を追加して論理削除済みデータを除外
+	        statement = connection.prepareStatement(
+	            "select * from subject where school_cd=? and cd=? and is_true = true");
+	        statement.setString(1, school.getCd());
+	        statement.setString(2, cd);
+	        ResultSet rSet = statement.executeQuery();
 
-			if (rSet.next()){
-				subject.setCd(rSet.getString("cd"));
-				subject.setName(rSet.getString("name"));
-			}else {
-				subject = null;
-			}
-		} catch (Exception e) {
-			throw e;
-		} finally {
-			// プリペアードステートメントを閉じる
-			if (statement !=null) {
-				try{
-					statement.close();
-				}catch (SQLException sqle){
-					throw sqle;
-				}
-			}
-			// コネクションを閉じる
-			if (connection != null){
-				try{
-					connection.close();
-				} catch (SQLException sqle) {
-					throw sqle;
-				}
-			}
-		}
-		return subject;
+	        if (rSet.next()) {
+	            subject.setCd(rSet.getString("cd"));
+	            subject.setName(rSet.getString("name"));
+	        } else {
+	            subject = null;
+	        }
+	    } catch (Exception e) {
+	        throw e;
+	    } finally {
+	        if (statement != null) {
+	            try {
+	                statement.close();
+	            } catch (SQLException sqle) {
+	                throw sqle;
+	            }
+	        }
+	        if (connection != null) {
+	            try {
+	                connection.close();
+	            } catch (SQLException sqle) {
+	                throw sqle;
+	            }
+	        }
+	    }
+	    return subject;
 	}
 
 	public List<Subject> filter(School school,boolean filter) throws Exception{
@@ -110,9 +104,11 @@ public class SubjectDao extends Dao{
 		int count = 0;
 
 		try {
-
+			// PostgreSQL用のINSERT ON CONFLICT構文（重複したらnameとis_trueを更新する）に修正
 			statement = connection.prepareStatement(
-					"merge into subject key(school_cd,cd) values(?,?,?,?) ");
+					"insert into subject (school_cd, cd, name, is_true) values (?, ?, ?, ?) " +
+					"on conflict (school_cd, cd) do update set name = excluded.name, is_true = excluded.is_true");
+			
 			statement.setString(1, subject.getSchool().getCd());
 			statement.setString(2, subject.getCd());
 			statement.setString(3, subject.getName());
@@ -122,8 +118,8 @@ public class SubjectDao extends Dao{
 			count = statement.executeUpdate();
 		}catch (Exception e){
 			e.printStackTrace();
-			statement.close();
-			connection.close();
+			if (statement != null) { statement.close(); }
+			if (connection != null) { connection.close(); }
 			return false;
 		} finally {
 			// プリペアードステートメントを閉じる
@@ -198,7 +194,7 @@ public class SubjectDao extends Dao{
 		PreparedStatement statement = null;
 		try{
 			statement = connection.prepareStatement(
-					"update subject set is_true = true where cd = ?");
+				    "select * from subject where school_cd=? and cd=? and is_true = true");
 			statement.setString(1, cd);
 			statement.executeUpdate();
 		}catch (Exception e) {
