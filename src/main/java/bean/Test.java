@@ -12,7 +12,6 @@ public class Test implements Serializable {
     private String class_num;    // クラス番号
     private String name;
     private int entYear;
-
     
     
     public Test() {}
@@ -80,5 +79,6 @@ public class Test implements Serializable {
 	public void setEntYear(int entYear) {
 	    this.entYear = entYear;
 	}
+
 
 }

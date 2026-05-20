@@ -23,24 +23,26 @@ public class TestDao extends Dao {
 
         try {
             String sql = """
-                SELECT
-                    s.student_no,
-                    s.name,
-                    s.class_num,
-                    s.ent_year,
-                    t.subject_cd,
-                    t.school_cd,
-                    t.no,
-                    t.point
-                FROM student s
-                LEFT JOIN test t
-                    ON s.student_no = t.student_no
-                    AND t.subject_cd = ?
-                    AND t.school_cd = ?
-                    AND t.no = ?
-                WHERE s.class_num = ?
-                  AND s.school_cd = ?
-                ORDER BY s.student_no
+             
+			SELECT
+			    s.no AS student_no,
+			    s.name,
+			    s.class_num,
+			    s.ent_year,
+			    t.subject_cd,
+			    t.school_cd,
+			    t.no,
+			    t.point
+			FROM student s
+			LEFT JOIN test t
+			    ON s.no = t.student_no
+			    AND t.subject_cd = ?
+			    AND t.school_cd = ?
+			    AND t.no = ?
+			WHERE s.class_num = ?
+			  AND s.school_cd = ?
+			ORDER BY s.no
+
             """;
 
             ps = con.prepareStatement(sql);
@@ -49,7 +51,8 @@ public class TestDao extends Dao {
             ps.setInt(3, no);
             ps.setString(4, classNum);
             ps.setString(5, schoolCd);
-
+            
+            System.out.println(ps);
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
@@ -65,7 +68,7 @@ public class TestDao extends Dao {
                 // 👇 追加項目（Testにフィールド追加して使う）
                 t.setName(rs.getString("name"));
                 t.setEntYear(rs.getInt("ent_year"));
-
+                
                 list.add(t);
             }
 
@@ -93,7 +96,7 @@ public class TestDao extends Dao {
                 FROM test
                 WHERE student_no=? AND subject_cd=? AND school_cd=? AND no=?
             """;
-
+            
             PreparedStatement ps1 = con.prepareStatement(checkSql);
             ps1.setString(1, test.getStudentNo());
             ps1.setString(2, test.getSubjectCd());
