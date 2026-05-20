@@ -10,7 +10,10 @@ public class Test implements Serializable {
     private int no;             // 回数
     private int point;          // 点数
     private String class_num;    // クラス番号
- 
+    private String name;
+    private int entYear;
+    
+    
     public Test() {}
  
     public String getStudentNo() {
@@ -60,4 +63,22 @@ public class Test implements Serializable {
     public void setClassNum(String class_num) {
         this.class_num = class_num;
     }
+
+	public String getName() {
+	    return name;
+	}
+	
+	public void setName(String name) {
+	    this.name = name;
+	}
+	
+	public int getEntYear() {
+	    return entYear;
+	}
+	
+	public void setEntYear(int entYear) {
+	    this.entYear = entYear;
+	}
+
+
 }
