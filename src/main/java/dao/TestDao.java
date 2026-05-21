@@ -3,16 +3,20 @@ package dao;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import bean.School;
+import bean.Student;
+import bean.Subject;
 import bean.Test;
 
 public class TestDao extends Dao {
 
-    // --------------------------------
-    // 検索（一覧表示）
-    // --------------------------------
+    // ============================================================
+    // ① 成績一覧（クラス × 科目 × 回数）
+    // ============================================================
     public List<Test> find(String schoolCd, String classNum,
                            String subjectCd, int no) throws Exception {
 
@@ -23,26 +27,24 @@ public class TestDao extends Dao {
 
         try {
             String sql = """
-             
-			SELECT
-			    s.no AS student_no,
-			    s.name,
-			    s.class_num,
-			    s.ent_year,
-			    t.subject_cd,
-			    t.school_cd,
-			    t.no,
-			    t.point
-			FROM student s
-			LEFT JOIN test t
-			    ON s.no = t.student_no
-			    AND t.subject_cd = ?
-			    AND t.school_cd = ?
-			    AND t.no = ?
-			WHERE s.class_num = ?
-			  AND s.school_cd = ?
-			ORDER BY s.no
-
+                SELECT
+                    s.no AS student_no,
+                    s.name,
+                    s.class_num,
+                    s.ent_year,
+                    t.subject_cd,
+                    t.school_cd,
+                    t.no,
+                    t.point
+                FROM student s
+                LEFT JOIN test t
+                    ON s.no = t.student_no
+                    AND t.subject_cd = ?
+                    AND t.school_cd = ?
+                    AND t.no = ?
+                WHERE s.class_num = ?
+                  AND s.school_cd = ?
+                ORDER BY s.no
             """;
 
             ps = con.prepareStatement(sql);
@@ -51,8 +53,7 @@ public class TestDao extends Dao {
             ps.setInt(3, no);
             ps.setString(4, classNum);
             ps.setString(5, schoolCd);
-            
-            System.out.println(ps);
+
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
@@ -65,10 +66,9 @@ public class TestDao extends Dao {
                 t.setNo(rs.getInt("no"));
                 t.setPoint(rs.getInt("point"));
 
-                // 👇 追加項目（Testにフィールド追加して使う）
                 t.setName(rs.getString("name"));
                 t.setEntYear(rs.getInt("ent_year"));
-                
+
                 list.add(t);
             }
 
@@ -82,21 +82,66 @@ public class TestDao extends Dao {
         return list;
     }
 
-    // --------------------------------
-    // 登録（INSERT or UPDATE）
-    // --------------------------------
+    // ============================================================
+    // ② 個別取得（student + subject + school + no）
+    // ============================================================
+    public Test get(Student student, Subject subject, School school, int no) throws Exception {
+
+        Test test = null;
+
+        Connection con = getConnection();
+        PreparedStatement ps = null;
+
+        try {
+            String sql = """
+                SELECT *
+                FROM test
+                WHERE student_no=? AND subject_cd=? AND school_cd=? AND no=?
+            """;
+
+            ps = con.prepareStatement(sql);
+            ps.setString(1, student.getNo());
+            ps.setString(2, subject.getCd());
+            ps.setString(3, school.getCd());
+            ps.setInt(4, no);
+
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                test = new Test();
+                test.setStudent(student);
+                test.setSubject(subject);
+                test.setSchool(school);
+                test.setClassNum(rs.getString("class_num"));
+                test.setNo(no);
+                test.setPoint(rs.getInt("point"));
+            }
+
+            rs.close();
+
+        } finally {
+            if (ps != null) ps.close();
+            if (con != null) con.close();
+        }
+
+        return test;
+    }
+
+    // ============================================================
+    // ③ 成績登録（INSERT or UPDATE）
+    // ============================================================
     public void save(Test test) throws Exception {
 
         Connection con = getConnection();
 
         try {
-            // データ存在チェック
+            // 既存チェック
             String checkSql = """
                 SELECT COUNT(*)
                 FROM test
                 WHERE student_no=? AND subject_cd=? AND school_cd=? AND no=?
             """;
-            
+
             PreparedStatement ps1 = con.prepareStatement(checkSql);
             ps1.setString(1, test.getStudentNo());
             ps1.setString(2, test.getSubjectCd());
@@ -114,16 +159,17 @@ public class TestDao extends Dao {
                 // UPDATE
                 String updateSql = """
                     UPDATE test
-                    SET point=?
+                    SET point=?, class_num=?
                     WHERE student_no=? AND subject_cd=? AND school_cd=? AND no=?
                 """;
 
                 PreparedStatement ps2 = con.prepareStatement(updateSql);
                 ps2.setInt(1, test.getPoint());
-                ps2.setString(2, test.getStudentNo());
-                ps2.setString(3, test.getSubjectCd());
-                ps2.setString(4, test.getSchoolCd());
-                ps2.setInt(5, test.getNo());
+                ps2.setString(2, test.getClassNum());
+                ps2.setString(3, test.getStudentNo());
+                ps2.setString(4, test.getSubjectCd());
+                ps2.setString(5, test.getSchoolCd());
+                ps2.setInt(6, test.getNo());
 
                 ps2.executeUpdate();
                 ps2.close();
@@ -131,8 +177,8 @@ public class TestDao extends Dao {
             } else {
                 // INSERT
                 String insertSql = """
-                    INSERT INTO test(student_no, subject_cd, school_cd, no, point)
-                    VALUES (?, ?, ?, ?, ?)
+                    INSERT INTO test(student_no, subject_cd, school_cd, no, point, class_num)
+                    VALUES (?, ?, ?, ?, ?, ?)
                 """;
 
                 PreparedStatement ps2 = con.prepareStatement(insertSql);
@@ -141,6 +187,7 @@ public class TestDao extends Dao {
                 ps2.setString(3, test.getSchoolCd());
                 ps2.setInt(4, test.getNo());
                 ps2.setInt(5, test.getPoint());
+                ps2.setString(6, test.getClassNum());
 
                 ps2.executeUpdate();
                 ps2.close();
@@ -149,5 +196,23 @@ public class TestDao extends Dao {
         } finally {
             if (con != null) con.close();
         }
+    }
+
+    // ============================================================
+    // ④ 複数保存
+    // ============================================================
+    public boolean save(List<Test> list) throws Exception {
+
+        Connection con = getConnection();
+
+        try {
+            for (Test t : list) {
+                save(t); // 単体 save を呼ぶ
+            }
+        } finally {
+            if (con != null) con.close();
+        }
+
+        return true;
     }
 }
