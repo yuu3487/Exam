@@ -12,7 +12,7 @@
 	<c:param name="content">
 		<section class="me-4">
 			<h2 class="h3 mb-3 fw-norma bg-secondary bg-opacity-10 py-2 px-4">学生情報変更</h2>
-			<form method="get" action="StudentUpdateExecute.action">
+			<form method="post" action="StudentUpdateExecute.action">
 			<div class="mx-3 my-4">
 				<div class="mb-3">
 					<label class="form-text-lavel" for="entYear">入学年度</label>
@@ -47,7 +47,7 @@
 						<input class="col btn btn-primary" type="submit" id="filter-button" value="変更" style="max-width:60px">
 
 					<div class="col d-flex justify-content-end">
-						<a href="StudentDelete.action?no=${student.getNo()}" class="btn btn-danger" role="button" style="max-width:60px">
+						<a href="StudentDelete.action?no=${student.getNo()}&school_cd=${student.getSchool().getCd()}" class="btn btn-danger" role="button" style="max-width:60px">
 							削除
 						</a>
 					</div>

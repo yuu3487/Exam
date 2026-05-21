@@ -1,39 +1,42 @@
 package scoremanager.main;
 
 import bean.Student;
-import bean.Teacher;
 import dao.StudentDao;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpSession;
 import tool.Action;
 
 public class StudentUpdateExecuteAction extends Action {
 
-	@Override
-	public void execute(HttpServletRequest req, HttpServletResponse res)
-			throws Exception {
-		HttpSession session = req.getSession();
-		Teacher teacher = (Teacher)session.getAttribute("user");
+    @Override
+    public void execute(HttpServletRequest req, HttpServletResponse res)
+            throws Exception {
 
-		int entYear = Integer.parseInt(req.getParameter("ent_year"));
-		String No = req.getParameter("no");
-		String name = req.getParameter("name");
-		String classNum = req.getParameter("class_num");
-		boolean isAttend = false;
-		isAttend = Boolean.parseBoolean(req.getParameter("is_attend"));
+        String no = req.getParameter("no");
+        String name = req.getParameter("name");
+        String classNum = req.getParameter("class_num");
+        String isAttendParam = req.getParameter("is_attend");
 
-		StudentDao sDao = new StudentDao();
-		Student student = sDao.get(No);
-		student.setNo(No);
-		student.setName(name);
-		student.setEntYear(entYear);
-		student.setClassNum(classNum);
-		student.setAttend(isAttend);
-		sDao.save(student);
+        boolean isAttend = (isAttendParam != null);
 
-		req.getRequestDispatcher("student_update_done.jsp").forward(req, res);
+        StudentDao dao = new StudentDao();
+        Student student = dao.get(no);
 
+        if (student == null) {
+            res.sendRedirect("StudentList.action");
+            return;
+        }
 
-	}
+        student.setName(name);
+        student.setClassNum(classNum);
+        student.setAttend(isAttend);
+
+        boolean result = dao.save(student);
+
+        if (!result) {
+            System.out.println("更新失敗");
+        }
+
+        res.sendRedirect("StudentList.action");
+    }
 }

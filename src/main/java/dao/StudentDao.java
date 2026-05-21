@@ -271,7 +271,16 @@ public class StudentDao extends Dao{
 
 		try {
 			statement = connection.prepareStatement(
-					"merge into student key(no) values(?,?,?,?,?,?)");
+				    "INSERT INTO student(no, name, ent_year, class_num, is_attend, school_cd) " +
+				    "VALUES (?, ?, ?, ?, ?, ?) " +
+				    "ON CONFLICT (no) DO UPDATE SET " +
+				    "name = EXCLUDED.name, " +
+				    "ent_year = EXCLUDED.ent_year, " +
+				    "class_num = EXCLUDED.class_num, " +
+				    "is_attend = EXCLUDED.is_attend, " +
+				    "school_cd = EXCLUDED.school_cd"
+				);
+
 			statement.setString(1, student.getNo());
 			statement.setString(2, student.getName());
 			statement.setInt(3, student.getEntYear());
