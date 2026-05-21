@@ -1,7 +1,6 @@
 package dao;
 
 
-import java.sql.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -346,4 +345,63 @@ public class StudentDao extends Dao{
 			return false;
 		}
 	}
+	public List<Integer> getEntYearSet(School school) throws Exception {
+	    List<Integer> list = new ArrayList<>();
+	    Connection connection = getConnection();
+	    PreparedStatement statement = null;
+	    ResultSet rSet = null;
+
+	    try {
+	        statement = connection.prepareStatement(
+	            "select distinct ent_year from student where school_cd = ? order by ent_year desc"
+	        );
+	        statement.setString(1, school.getCd());
+	        rSet = statement.executeQuery();
+
+	        while (rSet.next()) {
+	            list.add(rSet.getInt("ent_year"));
+	        }
+
+	    } finally {
+	        if (statement != null) statement.close();
+	        if (connection != null) connection.close();
+	    }
+
+	    return list;
+	}
+	public Student get(String studentNo, School school) throws Exception {
+	    Student student = null;
+
+	    Connection connection = getConnection();
+	    PreparedStatement statement = null;
+	    ResultSet rSet = null;
+
+	    try {
+	        statement = connection.prepareStatement(
+	            "select * from student where no = ? and school_cd = ?"
+	        );
+	        statement.setString(1, studentNo);
+	        statement.setString(2, school.getCd());
+
+	        rSet = statement.executeQuery();
+
+	        if (rSet.next()) {
+	            student = new Student();
+	            student.setNo(rSet.getString("no"));
+	            student.setName(rSet.getString("name"));
+	            student.setEntYear(rSet.getInt("ent_year"));
+	            student.setClassNum(rSet.getString("class_num"));
+	            student.setAttend(rSet.getBoolean("is_attend"));
+	            student.setSchool(school);
+	        }
+
+	    } finally {
+	        if (rSet != null) rSet.close();
+	        if (statement != null) statement.close();
+	        if (connection != null) connection.close();
+	    }
+
+	    return student;
+	}
 }
+
