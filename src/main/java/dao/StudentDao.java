@@ -338,7 +338,7 @@ public class StudentDao extends Dao{
 			statement.setString(2, school_cd);
 			count += statement.executeUpdate();
 			
-			connection.commit();
+			
 			statement.close();
 		}catch (Exception e) {
 			throw e;
