@@ -113,12 +113,19 @@
 		                <td>${test.classNum}</td>
 		                <td>${test.studentNo}</td>
 		                <td>${test.name}</td>
-		                <td>
-		                    <input type="text"
-		                        name="point_${test.studentNo}"
-		                        value="${test.point}"
-		                        class="form-control" style="width:150px;">
-		                </td>
+						<td>
+						    <input type="text"
+						        name="point_${test.studentNo}"
+						        value="${test.point}"
+						        class="form-control" style="width:150px;">
+						
+						    <!-- ✅ エラー表示 -->
+						    <c:if test="${errors[test.studentNo] != null}">
+						        <div style="color:red; font-size:small;">
+						            ${errors[test.studentNo]}
+						        </div>
+						    </c:if>
+						</td>
 		            </tr>
 		        </c:forEach>
 		        </tbody>

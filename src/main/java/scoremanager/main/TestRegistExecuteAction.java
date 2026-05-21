@@ -1,5 +1,6 @@
 package scoremanager.main;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import bean.School;
@@ -20,47 +21,93 @@ public class TestRegistExecuteAction extends Action {
         HttpSession session = req.getSession();
         Teacher teacher = (Teacher) session.getAttribute("user");
 
-        // 学校取得
         School school = teacher.getSchool();
 
-        // パラメータ取得
-        String f3 = req.getParameter("f3"); // 科目
-        String f4 = req.getParameter("f4"); // 回数
+        String f3 = req.getParameter("f3");
+        String f4 = req.getParameter("f4");
 
-        int no = 0;
-        if (f4 != null && !f4.equals("")) {
-            no = Integer.parseInt(f4);
-        }
+        int no = Integer.parseInt(f4);
 
-        // DAO
         TestDao dao = new TestDao();
 
-        // フォームから全パラメータ取得
+        Map<String, String> errors = new HashMap<>();
         Map<String, String[]> params = req.getParameterMap();
 
-        // 点数登録処理
+        // ✅ 入力チェック
         for (String key : params.keySet()) {
 
-            // point_学生番号 の形式だけ処理
             if (key.startsWith("point_")) {
 
                 String studentNo = key.replace("point_", "");
                 String pointStr = req.getParameter(key);
 
-                if (pointStr == null || pointStr.equals("")) continue;
+                // 空欄チェック
+                if (pointStr == null || pointStr.equals("")) {
+                    errors.put(studentNo, "点数を入力してください");
+                    continue;
+                }
+
+                int point;
+
+                try {
+                    point = Integer.parseInt(pointStr);
+                } catch (Exception e) {
+                    errors.put(studentNo, "数値で入力してください");
+                    continue;
+                }
+
+                // 範囲チェック
+                if (point < 0 || point > 100) {
+                    errors.put(studentNo, "0～100の範囲で入力してください");
+                }
+            }
+        }
+
+        // ✅ エラーがある場合
+        if (!errors.isEmpty()) {
+
+            req.setAttribute("errors", errors);
+
+            // 元の画面に戻す
+            TestDao findDao = new TestDao();
+            String f2 = req.getParameter("f2");
+
+            req.setAttribute("tests",
+                findDao.find(school.getCd(), f2, f3, no)
+            );
+
+            // 条件保持
+            req.setAttribute("f1", req.getParameter("f1"));
+            req.setAttribute("f2", f2);
+            req.setAttribute("f3", f3);
+            req.setAttribute("f4", f4);
+
+            req.getRequestDispatcher("test_regist.jsp")
+               .forward(req, res);
+
+            return;
+        }
+
+        // ✅ 正常登録
+        for (String key : params.keySet()) {
+
+            if (key.startsWith("point_")) {
+
+                String studentNo = key.replace("point_", "");
+                int point = Integer.parseInt(req.getParameter(key));
 
                 Test test = new Test();
                 test.setStudentNo(studentNo);
                 test.setSubjectCd(f3);
                 test.setSchoolCd(school.getCd());
                 test.setNo(no);
-                test.setPoint(Integer.parseInt(pointStr));
+                test.setPoint(point);
 
                 dao.save(test);
             }
         }
 
-        // 完了画面へ
+        // ✅ 完了画面
         req.getRequestDispatcher("test_regist_done.jsp")
            .forward(req, res);
     }
