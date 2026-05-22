@@ -37,6 +37,6 @@ public class StudentUpdateExecuteAction extends Action {
             System.out.println("更新失敗");
         }
 
-        res.sendRedirect("StudentList.action");
+        res.sendRedirect("student_update_done.jsp");
     }
 }
